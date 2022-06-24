@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Segments</title>
+
+		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+		<script src="data.js"></script>
+		<script src="Graph.js"></script>
+		<script src="functions.js"></script>
+
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+		<link rel="stylesheet" href="stylesheet.css">
+	</head>
+	<body>
+		<div class="container-fluid h-100 d-flex flex-column">
+			<div class="row min-vh-100">
+				<div class="col-3" id="content">
+					<div class="d-flex flex-column h-100 mh-100" style="color: white">
+						<div class="row">
+							<div class="col-md-12">
+								<h1>Demonstrate Graph</h1>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<h2>Show graph segments</h2>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-9">
+								<select id="select_segment">
+									<option value="">(none)</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<button onclick="show_segment()">show</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-9">
+								<label for="show_segment">Now showing segment rooted at: </label>
+							</div>
+							<div class="col-md-3">
+								<p id="show_segment"></p>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<h2>Show domains</h2>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-9">
+								<select id="select_domain">
+									<option value="">(none)</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<button onclick="show_domain()">show</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-9">
+								<label for="show_domain">Now showing domain number: </label>
+							</div>
+							<div class="col-md-3">
+								<p id="show_domain"></p>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<h2>Remove edge</h2>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-3">
+								<label for="edge_delSource">Source:</label>
+							</div>
+							<div class="col-md-3">
+								<select id="edge_delSource" onchange="update_delTarget()">
+									<option value="">(none)</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<label for="edge_delTarget">Target:</label>
+							</div>
+							<div class="col-md-3">
+								<select id="edge_delTarget">
+									<option value="">(none)</option>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<button onclick="edge_del()">remove selected edge</button>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<h2>Add edge</h2>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-3">
+								<label for="edge_addSource">Source:</label>
+							</div>
+							<div class="col-md-3">
+								<select id="edge_addSource" onchange="update_addTarget()">
+									<option value="">(none)</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<label for="edge_addTarget">Target:</label>
+							</div>
+							<div class="col-md-3">
+								<select id="edge_addTarget">
+									<option value="">(none)</option>
+								</select>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<input id="counter_edgeID" type="number" onkeydown="return false">
+							</div>
+							<div class="col-md-6">
+								<button onclick="edge_add()">add selected edge</button>
+							</div>
+							
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<h2>Reset graph to default</h2>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<button onclick="reset_graph()">reset</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-9">
+					<div id="cy"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		cy = cytoscape({
+			container: document.getElementById('cy'),
+			elements: [],
+			style: [
+				{
+					selector: 'node',
+					style: {
+						'label': 'data(id)',
+						'text-valign': 'data(valign)',
+						'text-halign': 'data(halign)',
+						'background-color': 'data(color)',
+						'opacity': 0.85
+					}
+				},
+				{
+					selector: 'edge',
+					style: {
+						'label': 'data(id)',
+						'line-style': 'data(is_up)',
+						'opacity': 0.85,
+						//'target-arrow-shape': 'triangle',
+					}
+				},
+				{
+					selector: 'node:selected',
+					style: {
+						'background-color': 'data(invert)'
+					}
+				}
+			]
+		})
+		document.getElementById('content').style.maxHeight = window.innerHeight + 'px'
+		var graph = new Graph(edges, 'A')
+		show_graph()
+		add_options('select_segment', graph.get_nodes())
+		add_options('select_domain', graph.get_domains())
+		add_options('edge_delSource', graph.get_nodes())
+		add_options('edge_addSource', graph.get_nodes())
+		add_options('edge_addTarget', graph.get_nodes())
+		//console.log(graph.links_intra)
+		//console.log(graph.links_child)
+		//console.log(graph.links_parent)
+		set_counterEdge()
+	</script>
+</html>
